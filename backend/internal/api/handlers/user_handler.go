@@ -11,11 +11,11 @@ import (
 )
 
 type UserHandler struct {
-	userRepo   *repository.User_Repository
+	userRepo   *repository.UserRepository
 	schoolRepo *repository.SchoolRepository
 }
 
-func NewUserHandler(userRepo *repository.User_Repository, schoolRepo *repository.SchoolRepository) *UserHandler {
+func NewUserHandler(userRepo *repository.UserRepository, schoolRepo *repository.SchoolRepository) *UserHandler {
 	return &UserHandler{
 		userRepo:   userRepo,
 		schoolRepo: schoolRepo,
