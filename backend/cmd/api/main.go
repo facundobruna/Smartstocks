@@ -1,6 +1,11 @@
 package main
 
 import (
+	"log"
+	"os"
+	"os/signal"
+	"syscall"
+
 	"github.com/smartstocks/backend/internal/api"
 	"github.com/smartstocks/backend/internal/api/handlers"
 	"github.com/smartstocks/backend/internal/config"
@@ -8,10 +13,6 @@ import (
 	"github.com/smartstocks/backend/internal/services"
 	"github.com/smartstocks/backend/pkg/database"
 	"github.com/smartstocks/backend/pkg/jwt"
-	"log"
-	"os"
-	"os/signal"
-	"syscall"
 )
 
 func main() {
@@ -42,6 +43,10 @@ func main() {
 	userRepo := repository.NewUserRepository(mysqlDB.DB)
 	refreshTokenRepo := repository.NewRefreshTokenRepository(mysqlDB.DB)
 	schoolRepo := repository.NewSchoolRepository(mysqlDB.DB)
+	quizRepo := repository.NewQuizRepository(mysqlDB.DB)
+
+	// Inicializar servicios externos
+	openAIService := services.NewOpenAIService(cfg.OpenAI.APIKey)
 
 	// Inicializar servicios
 	authService := services.NewAuthService(
@@ -52,14 +57,22 @@ func main() {
 		cfg.JWT.RefreshTokenExpirationDays,
 	)
 
+	quizService := services.NewQuizService(
+		quizRepo,
+		userRepo,
+		openAIService,
+	)
+
 	// Inicializar handlers
 	authHandler := handlers.NewAuthHandler(authService)
 	userHandler := handlers.NewUserHandler(userRepo, schoolRepo)
+	quizHandler := handlers.NewQuizHandler(quizService)
 
 	// Configurar router
 	router := api.NewRouter(
 		authHandler,
 		userHandler,
+		quizHandler,
 		jwtManager,
 		redisClient,
 		cfg,

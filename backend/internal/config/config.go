@@ -16,6 +16,7 @@ type Config struct {
 	Email    EmailConfig
 	AWS      AWSConfig
 	CORS     CORSConfig
+	OpenAI   OpenAIConfig
 }
 
 type ServerConfig struct {
@@ -61,6 +62,10 @@ type AWSConfig struct {
 
 type CORSConfig struct {
 	AllowedOrigins string
+}
+
+type OpenAIConfig struct {
+	APIKey string
 }
 
 func Load() (*Config, error) {
@@ -110,6 +115,9 @@ func Load() (*Config, error) {
 		},
 		CORS: CORSConfig{
 			AllowedOrigins: getEnv("ALLOWED_ORIGINS", "http://localhost:3000"),
+		},
+		OpenAI: OpenAIConfig{
+			APIKey: getEnv("OPENAI_API_KEY", ""),
 		},
 	}
 

@@ -15,6 +15,7 @@ type Router struct {
 	engine      *gin.Engine
 	authHandler *handlers.AuthHandler
 	userHandler *handlers.UserHandler
+	quizHandler *handlers.QuizHandler
 	jwtManager  *jwt.JWTManager
 	redis       *database.RedisClient
 	config      *config.Config
@@ -23,6 +24,7 @@ type Router struct {
 func NewRouter(
 	authHandler *handlers.AuthHandler,
 	userHandler *handlers.UserHandler,
+	quizHandler *handlers.QuizHandler,
 	jwtManager *jwt.JWTManager,
 	redis *database.RedisClient,
 	cfg *config.Config,
@@ -31,6 +33,7 @@ func NewRouter(
 		engine:      gin.Default(),
 		authHandler: authHandler,
 		userHandler: userHandler,
+		quizHandler: quizHandler,
 		jwtManager:  jwtManager,
 		redis:       redis,
 		config:      cfg,
@@ -73,6 +76,15 @@ func (r *Router) Setup() *gin.Engine {
 			user.GET("/profile", r.userHandler.GetProfile)
 			user.PUT("/profile", r.userHandler.UpdateProfile)
 			user.GET("/stats", r.userHandler.GetUserStats)
+		}
+
+		// Quiz routes (protegidas)
+		quiz := v1.Group("/quiz")
+		quiz.Use(middleware.AuthMiddleware(r.jwtManager))
+		{
+			quiz.GET("/:difficulty", r.quizHandler.GetDailyQuiz)
+			quiz.POST("/submit", r.quizHandler.SubmitQuiz)
+			quiz.GET("/history", r.quizHandler.GetQuizHistory)
 		}
 	}
 

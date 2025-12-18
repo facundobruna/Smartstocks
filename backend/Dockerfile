@@ -1,17 +1,22 @@
 # Build stage
-FROM golang:1.21-alpine AS builder
+FROM golang:1.24-alpine AS builder
 
 WORKDIR /app
 
 # Instalar dependencias del sistema
 RUN apk add --no-cache git
 
-# Copiar go.mod y go.sum
-COPY go.mod go.sum ./
+# Copiar go.mod primero
+COPY go.mod ./
+
+# Copiar go.sum si existe, sino continuará
+COPY go.sum ./
+
+# Descargar dependencias
 RUN go mod download
 
 # Copiar código fuente
-COPY . .
+COPY .. .
 
 # Build de la aplicación
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main ./cmd/api
