@@ -1,7 +1,7 @@
 {
   "info": {
-    "name": "Smart Stocks API - Complete",
-    "description": "API completa de Smart Stocks con Auth, Users y Quizzes",
+    "name": "Smart Stocks API - Fase 4 Simulator",
+    "description": "Colección actualizada con endpoints del simulador",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -18,38 +18,16 @@
       "value": ""
     },
     {
-      "key": "quiz_id",
+      "key": "scenario_id",
       "value": ""
     }
   ],
   "item": [
     {
-      "name": "Auth",
+      "name": "Simulator",
       "item": [
         {
-          "name": "Register",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"username\": \"juanperez\",\n  \"email\": \"juan@example.com\",\n  \"password\": \"Password123\",\n  \"school_id\": null\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/auth/register",
-              "host": ["{{base_url}}"],
-              "path": ["auth", "register"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Login",
+          "name": "Get Easy Scenario",
           "event": [
             {
               "listen": "test",
@@ -57,85 +35,12 @@
                 "exec": [
                   "const response = pm.response.json();",
                   "if (response.success && response.data) {",
-                  "    pm.collectionVariables.set('access_token', response.data.access_token);",
-                  "    pm.collectionVariables.set('refresh_token', response.data.refresh_token);",
-                  "    console.log('✅ Tokens guardados automáticamente');",
+                  "    pm.collectionVariables.set('scenario_id', response.data.scenario_id);",
                   "}"
                 ]
               }
             }
           ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"juan@example.com\",\n  \"password\": \"Password123\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/auth/login",
-              "host": ["{{base_url}}"],
-              "path": ["auth", "login"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Refresh Token",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"refresh_token\": \"{{refresh_token}}\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/auth/refresh",
-              "host": ["{{base_url}}"],
-              "path": ["auth", "refresh"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Logout",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"refresh_token\": \"{{refresh_token}}\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/auth/logout",
-              "host": ["{{base_url}}"],
-              "path": ["auth", "logout"]
-            }
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "User",
-      "item": [
-        {
-          "name": "Get Profile",
           "request": {
             "method": "GET",
             "header": [
@@ -145,9 +50,173 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/user/profile",
+              "raw": "{{base_url}}/simulator/easy",
               "host": ["{{base_url}}"],
-              "path": ["user", "profile"]
+              "path": ["simulator", "easy"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Medium Scenario",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "if (response.success && response.data) {",
+                  "    pm.collectionVariables.set('scenario_id', response.data.scenario_id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/simulator/medium",
+              "host": ["{{base_url}}"],
+              "path": ["simulator", "medium"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Hard Scenario",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "if (response.success && response.data) {",
+                  "    pm.collectionVariables.set('scenario_id', response.data.scenario_id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/simulator/hard",
+              "host": ["{{base_url}}"],
+              "path": ["simulator", "hard"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Submit Decision - Buy",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"scenario_id\": \"{{scenario_id}}\",\n  \"decision\": \"buy\",\n  \"time_taken_seconds\": 45\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/simulator/submit",
+              "host": ["{{base_url}}"],
+              "path": ["simulator", "submit"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Submit Decision - Sell",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"scenario_id\": \"{{scenario_id}}\",\n  \"decision\": \"sell\",\n  \"time_taken_seconds\": 30\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/simulator/submit",
+              "host": ["{{base_url}}"],
+              "path": ["simulator", "submit"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Submit Decision - Hold",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"scenario_id\": \"{{scenario_id}}\",\n  \"decision\": \"hold\",\n  \"time_taken_seconds\": 60\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/simulator/submit",
+              "host": ["{{base_url}}"],
+              "path": ["simulator", "submit"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get History",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/simulator/history?limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["simulator", "history"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
             }
           },
           "response": []
@@ -163,218 +232,68 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/user/stats",
+              "raw": "{{base_url}}/simulator/stats",
               "host": ["{{base_url}}"],
-              "path": ["user", "stats"]
+              "path": ["simulator", "stats"]
             }
           },
           "response": []
         },
         {
-          "name": "Update Profile",
+          "name": "Check Cooldown - Easy",
           "request": {
-            "method": "PUT",
+            "method": "GET",
             "header": [
               {
                 "key": "Authorization",
                 "value": "Bearer {{access_token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
               }
             ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"username\": \"nuevo_username\"\n}"
-            },
             "url": {
-              "raw": "{{base_url}}/user/profile",
+              "raw": "{{base_url}}/simulator/cooldown/easy",
               "host": ["{{base_url}}"],
-              "path": ["user", "profile"]
+              "path": ["simulator", "cooldown", "easy"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Check Cooldown - Medium",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/simulator/cooldown/medium",
+              "host": ["{{base_url}}"],
+              "path": ["simulator", "cooldown", "medium"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Check Cooldown - Hard",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/simulator/cooldown/hard",
+              "host": ["{{base_url}}"],
+              "path": ["simulator", "cooldown", "hard"]
             }
           },
           "response": []
         }
       ]
-    },
-    {
-      "name": "Quiz",
-      "item": [
-        {
-          "name": "Get Easy Quiz",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "const response = pm.response.json();",
-                  "if (response.success && response.data && response.data.quiz) {",
-                  "    pm.collectionVariables.set('quiz_id', response.data.quiz.id);",
-                  "    console.log('✅ Quiz ID guardado:', response.data.quiz.id);",
-                  "}"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/quiz/easy",
-              "host": ["{{base_url}}"],
-              "path": ["quiz", "easy"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get Medium Quiz",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "const response = pm.response.json();",
-                  "if (response.success && response.data && response.data.quiz) {",
-                  "    pm.collectionVariables.set('quiz_id', response.data.quiz.id);",
-                  "    console.log('✅ Quiz ID guardado:', response.data.quiz.id);",
-                  "}"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/quiz/medium",
-              "host": ["{{base_url}}"],
-              "path": ["quiz", "medium"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get Hard Quiz",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "const response = pm.response.json();",
-                  "if (response.success && response.data && response.data.quiz) {",
-                  "    pm.collectionVariables.set('quiz_id', response.data.quiz.id);",
-                  "    console.log('✅ Quiz ID guardado:', response.data.quiz.id);",
-                  "}"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/quiz/hard",
-              "host": ["{{base_url}}"],
-              "path": ["quiz", "hard"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Submit Quiz",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"quiz_id\": \"{{quiz_id}}\",\n  \"answers\": [\n    {\n      \"question_id\": \"question-id-1\",\n      \"answer\": \"A\"\n    },\n    {\n      \"question_id\": \"question-id-2\",\n      \"answer\": \"B\"\n    },\n    {\n      \"question_id\": \"question-id-3\",\n      \"answer\": \"C\"\n    }\n  ],\n  \"time_taken_seconds\": 300\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/quiz/submit",
-              "host": ["{{base_url}}"],
-              "path": ["quiz", "submit"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get Quiz History",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/quiz/history",
-              "host": ["{{base_url}}"],
-              "path": ["quiz", "history"]
-            }
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "Schools",
-      "item": [
-        {
-          "name": "Get All Schools",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/schools",
-              "host": ["{{base_url}}"],
-              "path": ["schools"]
-            }
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "Health Check",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "http://localhost:8080/health",
-          "protocol": "http",
-          "host": ["localhost"],
-          "port": "8080",
-          "path": ["health"]
-        }
-      },
-      "response": []
     }
   ]
 }

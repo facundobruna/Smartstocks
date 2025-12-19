@@ -66,6 +66,8 @@ type CORSConfig struct {
 
 type OpenAIConfig struct {
 	APIKey string
+	APIURL string
+	Model  string
 }
 
 func Load() (*Config, error) {
@@ -118,6 +120,8 @@ func Load() (*Config, error) {
 		},
 		OpenAI: OpenAIConfig{
 			APIKey: getEnv("OPENAI_API_KEY", ""),
+			APIURL: getEnv("OPENAI_API_URL", "https://api.openai.com/v1/chat/completions"),
+			Model:  getEnv("OPENAI_MODEL", "gpt-4"),
 		},
 	}
 

@@ -1,11 +1,6 @@
 package main
 
 import (
-	"log"
-	"os"
-	"os/signal"
-	"syscall"
-
 	"github.com/smartstocks/backend/internal/api"
 	"github.com/smartstocks/backend/internal/api/handlers"
 	"github.com/smartstocks/backend/internal/config"
@@ -13,6 +8,10 @@ import (
 	"github.com/smartstocks/backend/internal/services"
 	"github.com/smartstocks/backend/pkg/database"
 	"github.com/smartstocks/backend/pkg/jwt"
+	"log"
+	"os"
+	"os/signal"
+	"syscall"
 )
 
 func main() {
@@ -43,11 +42,14 @@ func main() {
 	userRepo := repository.NewUserRepository(mysqlDB.DB)
 	refreshTokenRepo := repository.NewRefreshTokenRepository(mysqlDB.DB)
 	schoolRepo := repository.NewSchoolRepository(mysqlDB.DB)
-	quizRepo := repository.NewQuizRepository(mysqlDB.DB)
-	forumRepo := repository.NewForumRepository(mysqlDB.DB)
+	simulatorRepo := repository.NewSimulatorRepository(mysqlDB.DB)
 
-	// Inicializar servicios externos
-	openAIService := services.NewOpenAIService(cfg.OpenAI.APIKey)
+	// Inicializar servicios de IA
+	simulatorAIService := services.NewSimulatorAIService(
+		cfg.OpenAI.APIKey,
+		cfg.OpenAI.APIURL,
+		cfg.OpenAI.Model,
+	)
 
 	// Inicializar servicios
 	authService := services.NewAuthService(
@@ -58,26 +60,22 @@ func main() {
 		cfg.JWT.RefreshTokenExpirationDays,
 	)
 
-	quizService := services.NewQuizService(
-		quizRepo,
+	simulatorService := services.NewSimulatorService(
+		simulatorRepo,
 		userRepo,
-		openAIService,
+		simulatorAIService,
 	)
-
-	forumService := services.NewForumService(forumRepo)
 
 	// Inicializar handlers
 	authHandler := handlers.NewAuthHandler(authService)
 	userHandler := handlers.NewUserHandler(userRepo, schoolRepo)
-	quizHandler := handlers.NewQuizHandler(quizService)
-	forumHandler := handlers.NewForumHandler(forumService)
+	simulatorHandler := handlers.NewSimulatorHandler(simulatorService)
 
 	// Configurar router
 	router := api.NewRouter(
 		authHandler,
 		userHandler,
-		quizHandler,
-		forumHandler,
+		simulatorHandler,
 		jwtManager,
 		redisClient,
 		cfg,
@@ -91,6 +89,11 @@ func main() {
 		log.Printf("📊 Environment: %s", cfg.Server.GinMode)
 		log.Printf("✅ MySQL connected to %s", cfg.Database.Host)
 		log.Printf("✅ Redis connected to %s", cfg.Redis.Host)
+		if cfg.OpenAI.APIKey != "" {
+			log.Printf("✅ OpenAI configured (model: %s)", cfg.OpenAI.Model)
+		} else {
+			log.Printf("⚠️  OpenAI not configured - using fallback scenarios")
+		}
 
 		if err := engine.Run(":" + cfg.Server.Port); err != nil {
 			log.Fatalf("Failed to start server: %v", err)
