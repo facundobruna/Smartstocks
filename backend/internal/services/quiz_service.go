@@ -31,11 +31,15 @@ func NewQuizService(
 
 // GetDailyQuiz obtiene o genera el quiz diario por dificultad
 func (s *QuizService) GetDailyQuiz(userID, difficulty string) (*models.QuizResponse, error) {
+	fmt.Printf("🎯 GetDailyQuiz llamado - User: %s, Difficulty: %s\n", userID, difficulty)
+
 	// Verificar cooldown
 	canAttempt, err := s.quizRepo.CheckCooldown(userID, difficulty)
 	if err != nil {
 		return nil, fmt.Errorf("error checking cooldown: %w", err)
 	}
+
+	fmt.Printf("   Can attempt: %v\n", canAttempt)
 
 	// Buscar quiz activo
 	quiz, err := s.quizRepo.GetActiveQuizByDifficulty(difficulty)
@@ -45,10 +49,13 @@ func (s *QuizService) GetDailyQuiz(userID, difficulty string) (*models.QuizRespo
 
 	// Si no existe quiz o expiró, generar uno nuevo
 	if quiz == nil {
+		fmt.Println("   No hay quiz activo, generando uno nuevo...")
 		quiz, err = s.generateNewQuiz(difficulty)
 		if err != nil {
 			return nil, fmt.Errorf("error generating quiz: %w", err)
 		}
+	} else {
+		fmt.Printf("   Quiz existente encontrado: %s\n", quiz.ID)
 	}
 
 	// Obtener preguntas
@@ -56,6 +63,8 @@ func (s *QuizService) GetDailyQuiz(userID, difficulty string) (*models.QuizRespo
 	if err != nil {
 		return nil, fmt.Errorf("error getting questions: %w", err)
 	}
+
+	fmt.Printf("   Total preguntas obtenidas: %d\n", len(questions))
 
 	response := &models.QuizResponse{
 		Quiz:       quiz,
@@ -80,6 +89,8 @@ func (s *QuizService) GetDailyQuiz(userID, difficulty string) (*models.QuizRespo
 
 // generateNewQuiz genera un nuevo quiz usando OpenAI
 func (s *QuizService) generateNewQuiz(difficulty string) (*models.Quiz, error) {
+	fmt.Println("🔨 Generando nuevo quiz...")
+
 	// Determinar puntos según dificultad
 	pointsReward := map[string]int{
 		"easy":   500,
@@ -103,14 +114,20 @@ func (s *QuizService) generateNewQuiz(difficulty string) (*models.Quiz, error) {
 		return nil, fmt.Errorf("error creating quiz: %w", err)
 	}
 
+	fmt.Printf("   Quiz creado con ID: %s\n", quiz.ID)
+
 	// Generar preguntas con OpenAI
 	generatedQuestions, err := s.openAIService.GenerateQuizQuestions(difficulty, 10)
 	if err != nil {
+		// Log del error para debugging
+		fmt.Printf("❌ ERROR generando preguntas con OpenAI: %v\n", err)
 		return nil, fmt.Errorf("error generating questions with AI: %w", err)
 	}
 
+	fmt.Printf("✅ Generadas %d preguntas con OpenAI\n", len(generatedQuestions))
+
 	// Guardar preguntas en la base de datos
-	for _, gq := range generatedQuestions {
+	for i, gq := range generatedQuestions {
 		question := &models.QuizQuestion{
 			QuizID:        quiz.ID,
 			QuestionText:  gq.Question,
@@ -125,8 +142,10 @@ func (s *QuizService) generateNewQuiz(difficulty string) (*models.Quiz, error) {
 		}
 
 		if err := s.quizRepo.CreateQuestion(question); err != nil {
-			return nil, fmt.Errorf("error saving question: %w", err)
+			fmt.Printf("❌ ERROR guardando pregunta %d: %v\n", i+1, err)
+			return nil, fmt.Errorf("error saving question %d: %w", i+1, err)
 		}
+		fmt.Printf("✅ Pregunta %d guardada\n", i+1)
 	}
 
 	return quiz, nil

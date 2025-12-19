@@ -12,31 +12,34 @@ import (
 )
 
 type Router struct {
-	engine      *gin.Engine
-	authHandler *handlers.AuthHandler
-	userHandler *handlers.UserHandler
-	quizHandler *handlers.QuizHandler
-	jwtManager  *jwt.JWTManager
-	redis       *database.RedisClient
-	config      *config.Config
+	engine       *gin.Engine
+	authHandler  *handlers.AuthHandler
+	userHandler  *handlers.UserHandler
+	quizHandler  *handlers.QuizHandler
+	forumHandler *handlers.ForumHandler
+	jwtManager   *jwt.JWTManager
+	redis        *database.RedisClient
+	config       *config.Config
 }
 
 func NewRouter(
 	authHandler *handlers.AuthHandler,
 	userHandler *handlers.UserHandler,
 	quizHandler *handlers.QuizHandler,
+	forumHandler *handlers.ForumHandler,
 	jwtManager *jwt.JWTManager,
 	redis *database.RedisClient,
 	cfg *config.Config,
 ) *Router {
 	return &Router{
-		engine:      gin.Default(),
-		authHandler: authHandler,
-		userHandler: userHandler,
-		quizHandler: quizHandler,
-		jwtManager:  jwtManager,
-		redis:       redis,
-		config:      cfg,
+		engine:       gin.Default(),
+		authHandler:  authHandler,
+		userHandler:  userHandler,
+		quizHandler:  quizHandler,
+		forumHandler: forumHandler,
+		jwtManager:   jwtManager,
+		redis:        redis,
+		config:       cfg,
 	}
 }
 
@@ -85,6 +88,27 @@ func (r *Router) Setup() *gin.Engine {
 			quiz.GET("/:difficulty", r.quizHandler.GetDailyQuiz)
 			quiz.POST("/submit", r.quizHandler.SubmitQuiz)
 			quiz.GET("/history", r.quizHandler.GetQuizHistory)
+		}
+
+		// Forum routes (algunas públicas, otras protegidas)
+		forum := v1.Group("/forum")
+		{
+			// Rutas públicas
+			forum.GET("/posts", r.forumHandler.GetPosts)
+			forum.GET("/posts/:id", r.forumHandler.GetPostByID)
+
+			// Rutas protegidas
+			forumAuth := forum.Group("")
+			forumAuth.Use(middleware.AuthMiddleware(r.jwtManager))
+			{
+				forumAuth.POST("/posts", r.forumHandler.CreatePost)
+				forumAuth.PUT("/posts/:id", r.forumHandler.UpdatePost)
+				forumAuth.DELETE("/posts/:id", r.forumHandler.DeletePost)
+				forumAuth.POST("/replies", r.forumHandler.CreateReply)
+				forumAuth.DELETE("/replies/:id", r.forumHandler.DeleteReply)
+				forumAuth.POST("/react", r.forumHandler.ReactToPost)
+				forumAuth.DELETE("/react", r.forumHandler.RemoveReaction)
+			}
 		}
 	}
 

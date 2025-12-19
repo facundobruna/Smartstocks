@@ -44,6 +44,7 @@ func main() {
 	refreshTokenRepo := repository.NewRefreshTokenRepository(mysqlDB.DB)
 	schoolRepo := repository.NewSchoolRepository(mysqlDB.DB)
 	quizRepo := repository.NewQuizRepository(mysqlDB.DB)
+	forumRepo := repository.NewForumRepository(mysqlDB.DB)
 
 	// Inicializar servicios externos
 	openAIService := services.NewOpenAIService(cfg.OpenAI.APIKey)
@@ -63,16 +64,20 @@ func main() {
 		openAIService,
 	)
 
+	forumService := services.NewForumService(forumRepo)
+
 	// Inicializar handlers
 	authHandler := handlers.NewAuthHandler(authService)
 	userHandler := handlers.NewUserHandler(userRepo, schoolRepo)
 	quizHandler := handlers.NewQuizHandler(quizService)
+	forumHandler := handlers.NewForumHandler(forumService)
 
 	// Configurar router
 	router := api.NewRouter(
 		authHandler,
 		userHandler,
 		quizHandler,
+		forumHandler,
 		jwtManager,
 		redisClient,
 		cfg,

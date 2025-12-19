@@ -1,7 +1,7 @@
 {
   "info": {
-    "name": "Smart Stocks API",
-    "description": "API de Smart Stocks - Educación Financiera",
+    "name": "Smart Stocks API - Complete",
+    "description": "API completa de Smart Stocks con Auth, Users y Quizzes",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -15,6 +15,10 @@
     },
     {
       "key": "refresh_token",
+      "value": ""
+    },
+    {
+      "key": "quiz_id",
       "value": ""
     }
   ],
@@ -55,6 +59,7 @@
                   "if (response.success && response.data) {",
                   "    pm.collectionVariables.set('access_token', response.data.access_token);",
                   "    pm.collectionVariables.set('refresh_token', response.data.refresh_token);",
+                  "    console.log('✅ Tokens guardados automáticamente');",
                   "}"
                 ]
               }
@@ -187,6 +192,151 @@
               "raw": "{{base_url}}/user/profile",
               "host": ["{{base_url}}"],
               "path": ["user", "profile"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Quiz",
+      "item": [
+        {
+          "name": "Get Easy Quiz",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "if (response.success && response.data && response.data.quiz) {",
+                  "    pm.collectionVariables.set('quiz_id', response.data.quiz.id);",
+                  "    console.log('✅ Quiz ID guardado:', response.data.quiz.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/quiz/easy",
+              "host": ["{{base_url}}"],
+              "path": ["quiz", "easy"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Medium Quiz",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "if (response.success && response.data && response.data.quiz) {",
+                  "    pm.collectionVariables.set('quiz_id', response.data.quiz.id);",
+                  "    console.log('✅ Quiz ID guardado:', response.data.quiz.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/quiz/medium",
+              "host": ["{{base_url}}"],
+              "path": ["quiz", "medium"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Hard Quiz",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "if (response.success && response.data && response.data.quiz) {",
+                  "    pm.collectionVariables.set('quiz_id', response.data.quiz.id);",
+                  "    console.log('✅ Quiz ID guardado:', response.data.quiz.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/quiz/hard",
+              "host": ["{{base_url}}"],
+              "path": ["quiz", "hard"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Submit Quiz",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quiz_id\": \"{{quiz_id}}\",\n  \"answers\": [\n    {\n      \"question_id\": \"question-id-1\",\n      \"answer\": \"A\"\n    },\n    {\n      \"question_id\": \"question-id-2\",\n      \"answer\": \"B\"\n    },\n    {\n      \"question_id\": \"question-id-3\",\n      \"answer\": \"C\"\n    }\n  ],\n  \"time_taken_seconds\": 300\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/quiz/submit",
+              "host": ["{{base_url}}"],
+              "path": ["quiz", "submit"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Quiz History",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/quiz/history",
+              "host": ["{{base_url}}"],
+              "path": ["quiz", "history"]
             }
           },
           "response": []

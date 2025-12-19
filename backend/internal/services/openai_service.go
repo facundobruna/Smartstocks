@@ -53,10 +53,13 @@ type GeneratedQuestion struct {
 }
 
 func (s *OpenAIService) GenerateQuizQuestions(difficulty string, count int) ([]GeneratedQuestion, error) {
+	fmt.Println("🤖 Iniciando generación de preguntas con OpenAI...")
+	fmt.Printf("   Dificultad: %s, Cantidad: %d\n", difficulty, count)
+
 	prompt := s.buildPrompt(difficulty, count)
 
 	reqBody := OpenAIRequest{
-		Model: "gpt-4",
+		Model: "openai/gpt-3.5-turbo", // OpenRouter requiere el prefijo "openai/"
 		Messages: []OpenAIMessage{
 			{
 				Role:    "system",
@@ -71,18 +74,22 @@ func (s *OpenAIService) GenerateQuizQuestions(difficulty string, count int) ([]G
 		MaxTokens:   2000,
 	}
 
+	fmt.Println("📤 Enviando request a OpenAI...")
+
 	jsonData, err := json.Marshal(reqBody)
 	if err != nil {
 		return nil, fmt.Errorf("error marshaling request: %w", err)
 	}
 
-	req, err := http.NewRequest("POST", "https://api.openai.com/v1/chat/completions", bytes.NewBuffer(jsonData))
+	req, err := http.NewRequest("POST", "https://openrouter.ai/api/v1/chat/completions", bytes.NewBuffer(jsonData))
 	if err != nil {
 		return nil, fmt.Errorf("error creating request: %w", err)
 	}
 
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+s.apiKey)
+	req.Header.Set("HTTP-Referer", "https://smartstocks.com") // OpenRouter requiere esto
+	req.Header.Set("X-Title", "Smart Stocks Quiz")            // Opcional pero recomendado
 
 	resp, err := s.httpClient.Do(req)
 	if err != nil {
@@ -94,6 +101,13 @@ func (s *OpenAIService) GenerateQuizQuestions(difficulty string, count int) ([]G
 	if err != nil {
 		return nil, fmt.Errorf("error reading response: %w", err)
 	}
+
+	// Mostrar solo los primeros caracteres disponibles
+	preview := string(body)
+	if len(preview) > 200 {
+		preview = preview[:200]
+	}
+	fmt.Printf("📥 Respuesta de OpenAI (status %d): %s\n", resp.StatusCode, preview)
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("OpenAI API error: %s - %s", resp.Status, string(body))
@@ -111,10 +125,14 @@ func (s *OpenAIService) GenerateQuizQuestions(difficulty string, count int) ([]G
 	// Parse el JSON de las preguntas generadas
 	var questions []GeneratedQuestion
 	content := openaiResp.Choices[0].Message.Content
+
+	fmt.Printf("📝 Content recibido: %s\n", content[:min(len(content), 300)])
+
 	if err := json.Unmarshal([]byte(content), &questions); err != nil {
-		return nil, fmt.Errorf("error parsing generated questions: %w", err)
+		return nil, fmt.Errorf("error parsing generated questions: %w - Content: %s", err, content)
 	}
 
+	fmt.Printf("✅ %d preguntas parseadas correctamente\n", len(questions))
 	return questions, nil
 }
 
