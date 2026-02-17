@@ -15,6 +15,9 @@ type Router struct {
 	engine             *gin.Engine
 	authHandler        *handlers.AuthHandler
 	userHandler        *handlers.UserHandler
+	quizHandler        *handlers.QuizHandler
+	forumHandler       *handlers.ForumHandler
+	coursesHandler     *handlers.CoursesHandler
 	simulatorHandler   *handlers.SimulatorHandler
 	pvpHandler         *handlers.PvPHandler
 	rankingsHandler    *handlers.RankingsHandler
@@ -28,6 +31,9 @@ type Router struct {
 func NewRouter(
 	authHandler *handlers.AuthHandler,
 	userHandler *handlers.UserHandler,
+	quizHandler *handlers.QuizHandler,
+	forumHandler *handlers.ForumHandler,
+	coursesHandler *handlers.CoursesHandler,
 	simulatorHandler *handlers.SimulatorHandler,
 	pvpHandler *handlers.PvPHandler,
 	rankingsHandler *handlers.RankingsHandler,
@@ -41,6 +47,9 @@ func NewRouter(
 		engine:             gin.Default(),
 		authHandler:        authHandler,
 		userHandler:        userHandler,
+		quizHandler:        quizHandler,
+		forumHandler:       forumHandler,
+		coursesHandler:     coursesHandler,
 		simulatorHandler:   simulatorHandler,
 		pvpHandler:         pvpHandler,
 		rankingsHandler:    rankingsHandler,
@@ -89,6 +98,46 @@ func (r *Router) Setup() *gin.Engine {
 			user.GET("/profile", r.userHandler.GetProfile)
 			user.PUT("/profile", r.userHandler.UpdateProfile)
 			user.GET("/stats", r.userHandler.GetUserStats)
+		}
+
+		// Quiz routes (protegidas)
+		quiz := v1.Group("/quiz")
+		quiz.Use(middleware.AuthMiddleware(r.jwtManager))
+		{
+			quiz.GET("/:difficulty", r.quizHandler.GetDailyQuiz)
+			quiz.POST("/submit", r.quizHandler.SubmitQuiz)
+			quiz.GET("/history", r.quizHandler.GetQuizHistory)
+		}
+
+		// Forum routes (parcialmente públicas)
+		forum := v1.Group("/forum")
+		{
+			// Rutas públicas (lectura)
+			forum.GET("/posts", r.forumHandler.GetPosts)
+			forum.GET("/posts/:id", r.forumHandler.GetPostByID)
+
+			// Rutas protegidas (escritura)
+			forumAuth := forum.Group("")
+			forumAuth.Use(middleware.AuthMiddleware(r.jwtManager))
+			{
+				forumAuth.POST("/posts", r.forumHandler.CreatePost)
+				forumAuth.PUT("/posts/:id", r.forumHandler.UpdatePost)
+				forumAuth.DELETE("/posts/:id", r.forumHandler.DeletePost)
+				forumAuth.POST("/replies", r.forumHandler.CreateReply)
+				forumAuth.DELETE("/replies/:id", r.forumHandler.DeleteReply)
+				forumAuth.POST("/react", r.forumHandler.ReactToPost)
+				forumAuth.DELETE("/react", r.forumHandler.RemoveReaction)
+			}
+		}
+
+		// Courses routes (protegidas)
+		courses := v1.Group("/courses")
+		courses.Use(middleware.AuthMiddleware(r.jwtManager))
+		{
+			courses.GET("", r.coursesHandler.GetAllCourses)
+			courses.GET("/:id", r.coursesHandler.GetCourseByID)
+			courses.GET("/lessons/:id", r.coursesHandler.GetLessonByID)
+			courses.POST("/lessons/:id/complete", r.coursesHandler.CompleteLesson)
 		}
 
 		// Simulator routes (protegidas)

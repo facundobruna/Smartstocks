@@ -48,6 +48,9 @@ func main() {
 	userRepo := repository.NewUserRepository(mysqlDB.DB)
 	refreshTokenRepo := repository.NewRefreshTokenRepository(mysqlDB.DB)
 	schoolRepo := repository.NewSchoolRepository(mysqlDB.DB)
+	quizRepo := repository.NewQuizRepository(mysqlDB.DB)
+	forumRepo := repository.NewForumRepository(mysqlDB.DB)
+	coursesRepo := repository.NewCoursesRepository(mysqlDB.DB)
 	simulatorRepo := repository.NewSimulatorRepository(mysqlDB.DB)
 	pvpRepo := repository.NewPvPRepository(mysqlDB.DB)
 	rankingsRepo := repository.NewRankingsRepository(mysqlDB.DB)
@@ -55,6 +58,7 @@ func main() {
 	tournamentsRepo := repository.NewTournamentsRepository(mysqlDB.DB)
 
 	// Inicializar servicios de IA
+	openAIService := services.NewOpenAIService(cfg.OpenAI.APIKey)
 	simulatorAIService := services.NewSimulatorAIService(
 		cfg.OpenAI.APIKey,
 		cfg.OpenAI.APIURL,
@@ -69,6 +73,16 @@ func main() {
 		jwtManager,
 		cfg.JWT.RefreshTokenExpirationDays,
 	)
+
+	quizService := services.NewQuizService(
+		quizRepo,
+		userRepo,
+		openAIService,
+	)
+
+	forumService := services.NewForumService(forumRepo)
+
+	coursesService := services.NewCoursesService(coursesRepo, userRepo)
 
 	simulatorService := services.NewSimulatorService(
 		simulatorRepo,
@@ -100,6 +114,9 @@ func main() {
 	// Inicializar handlers
 	authHandler := handlers.NewAuthHandler(authService)
 	userHandler := handlers.NewUserHandler(userRepo, schoolRepo)
+	quizHandler := handlers.NewQuizHandler(quizService)
+	forumHandler := handlers.NewForumHandler(forumService)
+	coursesHandler := handlers.NewCoursesHandler(coursesService)
 	simulatorHandler := handlers.NewSimulatorHandler(simulatorService)
 	pvpHandler := handlers.NewPvPHandler(pvpService, wsManager)
 	rankingsHandler := handlers.NewRankingsHandler(rankingsService)
@@ -110,6 +127,9 @@ func main() {
 	router := api.NewRouter(
 		authHandler,
 		userHandler,
+		quizHandler,
+		forumHandler,
+		coursesHandler,
 		simulatorHandler,
 		pvpHandler,
 		rankingsHandler,
