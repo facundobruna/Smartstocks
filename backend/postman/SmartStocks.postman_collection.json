@@ -1,8 +1,9 @@
 {
   "info": {
-    "name": "Smart Stocks API - Fase 4 Simulator",
-    "description": "Colección actualizada con endpoints del simulador",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    "name": "Smart Stocks API - Complete (Fase 1-7)",
+    "description": "Colección completa con todas las 7 fases del sistema Smart Stocks",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "1.0.0"
   },
   "variable": [
     {
@@ -20,11 +21,188 @@
     {
       "key": "scenario_id",
       "value": ""
+    },
+    {
+      "key": "match_id",
+      "value": ""
+    },
+    {
+      "key": "school_id",
+      "value": ""
+    },
+    {
+      "key": "target_user_id",
+      "value": ""
+    },
+    {
+      "key": "tournament_id",
+      "value": ""
     }
   ],
   "item": [
     {
-      "name": "Simulator",
+      "name": "0. Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/health",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["health"]
+        }
+      }
+    },
+    {
+      "name": "1. Auth",
+      "item": [
+        {
+          "name": "Register",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "if (response.success && response.data) {",
+                  "    pm.collectionVariables.set('access_token', response.data.access_token);",
+                  "    pm.collectionVariables.set('refresh_token', response.data.refresh_token);",
+                  "    console.log('✅ Tokens saved');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"testuser\",\n  \"email\": \"test@smartstocks.com\",\n  \"password\": \"Password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "if (response.success && response.data) {",
+                  "    pm.collectionVariables.set('access_token', response.data.access_token);",
+                  "    pm.collectionVariables.set('refresh_token', response.data.refresh_token);",
+                  "    console.log('✅ Logged in successfully');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@smartstocks.com\",\n  \"password\": \"Password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. User",
+      "item": [
+        {
+          "name": "Get Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/user/profile",
+              "host": ["{{base_url}}"],
+              "path": ["user", "profile"]
+            }
+          }
+        },
+        {
+          "name": "Get Stats",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/user/stats",
+              "host": ["{{base_url}}"],
+              "path": ["user", "stats"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Schools",
+      "item": [
+        {
+          "name": "Get All Schools",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "if (response.success && response.data && response.data.length > 0) {",
+                  "    pm.collectionVariables.set('school_id', response.data[0].id);",
+                  "    console.log('✅ School ID saved:', response.data[0].id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/schools",
+              "host": ["{{base_url}}"],
+              "path": ["schools"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Simulator",
       "item": [
         {
           "name": "Get Easy Scenario",
@@ -36,6 +214,7 @@
                   "const response = pm.response.json();",
                   "if (response.success && response.data) {",
                   "    pm.collectionVariables.set('scenario_id', response.data.scenario_id);",
+                  "    console.log('✅ Scenario ID saved');",
                   "}"
                 ]
               }
@@ -54,73 +233,10 @@
               "host": ["{{base_url}}"],
               "path": ["simulator", "easy"]
             }
-          },
-          "response": []
+          }
         },
         {
-          "name": "Get Medium Scenario",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "const response = pm.response.json();",
-                  "if (response.success && response.data) {",
-                  "    pm.collectionVariables.set('scenario_id', response.data.scenario_id);",
-                  "}"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/simulator/medium",
-              "host": ["{{base_url}}"],
-              "path": ["simulator", "medium"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get Hard Scenario",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "const response = pm.response.json();",
-                  "if (response.success && response.data) {",
-                  "    pm.collectionVariables.set('scenario_id', response.data.scenario_id);",
-                  "}"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/simulator/hard",
-              "host": ["{{base_url}}"],
-              "path": ["simulator", "hard"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Submit Decision - Buy",
+          "name": "Submit Decision",
           "request": {
             "method": "POST",
             "header": [
@@ -142,63 +258,36 @@
               "host": ["{{base_url}}"],
               "path": ["simulator", "submit"]
             }
-          },
-          "response": []
-        },
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. PvP",
+      "item": [
         {
-          "name": "Submit Decision - Sell",
+          "name": "Join Queue",
           "request": {
             "method": "POST",
             "header": [
               {
                 "key": "Authorization",
                 "value": "Bearer {{access_token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
               }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"scenario_id\": \"{{scenario_id}}\",\n  \"decision\": \"sell\",\n  \"time_taken_seconds\": 30\n}"
+              "raw": "{}"
             },
             "url": {
-              "raw": "{{base_url}}/simulator/submit",
+              "raw": "{{base_url}}/pvp/queue/join",
               "host": ["{{base_url}}"],
-              "path": ["simulator", "submit"]
+              "path": ["pvp", "queue", "join"]
             }
-          },
-          "response": []
+          }
         },
         {
-          "name": "Submit Decision - Hold",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"scenario_id\": \"{{scenario_id}}\",\n  \"decision\": \"hold\",\n  \"time_taken_seconds\": 60\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/simulator/submit",
-              "host": ["{{base_url}}"],
-              "path": ["simulator", "submit"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get History",
+          "name": "Get PvP History",
           "request": {
             "method": "GET",
             "header": [
@@ -208,9 +297,9 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/simulator/history?limit=10",
+              "raw": "{{base_url}}/pvp/history?limit=10",
               "host": ["{{base_url}}"],
-              "path": ["simulator", "history"],
+              "path": ["pvp", "history"],
               "query": [
                 {
                   "key": "limit",
@@ -218,11 +307,15 @@
                 }
               ]
             }
-          },
-          "response": []
-        },
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Rankings",
+      "item": [
         {
-          "name": "Get Stats",
+          "name": "Get Global Leaderboard",
           "request": {
             "method": "GET",
             "header": [
@@ -232,15 +325,20 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/simulator/stats",
+              "raw": "{{base_url}}/rankings/global?limit=100",
               "host": ["{{base_url}}"],
-              "path": ["simulator", "stats"]
+              "path": ["rankings", "global"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "100"
+                }
+              ]
             }
-          },
-          "response": []
+          }
         },
         {
-          "name": "Check Cooldown - Easy",
+          "name": "Get My Position",
           "request": {
             "method": "GET",
             "header": [
@@ -250,15 +348,14 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/simulator/cooldown/easy",
+              "raw": "{{base_url}}/rankings/my-position",
               "host": ["{{base_url}}"],
-              "path": ["simulator", "cooldown", "easy"]
+              "path": ["rankings", "my-position"]
             }
-          },
-          "response": []
+          }
         },
         {
-          "name": "Check Cooldown - Medium",
+          "name": "Get My Achievements",
           "request": {
             "method": "GET",
             "header": [
@@ -268,15 +365,19 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/simulator/cooldown/medium",
+              "raw": "{{base_url}}/rankings/achievements",
               "host": ["{{base_url}}"],
-              "path": ["simulator", "cooldown", "medium"]
+              "path": ["rankings", "achievements"]
             }
-          },
-          "response": []
-        },
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Tokens",
+      "item": [
         {
-          "name": "Check Cooldown - Hard",
+          "name": "Get My Tokens",
           "request": {
             "method": "GET",
             "header": [
@@ -286,12 +387,169 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/simulator/cooldown/hard",
+              "raw": "{{base_url}}/tokens/balance?limit=20",
               "host": ["{{base_url}}"],
-              "path": ["simulator", "cooldown", "hard"]
+              "path": ["tokens", "balance"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
             }
-          },
-          "response": []
+          }
+        },
+        {
+          "name": "Get Transaction History",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/tokens/transactions?limit=50",
+              "host": ["{{base_url}}"],
+              "path": ["tokens", "transactions"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "50"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "8. Tournaments",
+      "item": [
+        {
+          "name": "Get Active Tournaments",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "if (response.success && response.data && response.data.tournaments && response.data.tournaments.length > 0) {",
+                  "    pm.collectionVariables.set('tournament_id', response.data.tournaments[0].id);",
+                  "    console.log('✅ Tournament ID saved:', response.data.tournaments[0].id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/tournaments",
+              "host": ["{{base_url}}"],
+              "path": ["tournaments"]
+            }
+          }
+        },
+        {
+          "name": "Get Tournament Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/tournaments/{{tournament_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["tournaments", "{{tournament_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Join Tournament",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tournament_id\": \"{{tournament_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/tournaments/join",
+              "host": ["{{base_url}}"],
+              "path": ["tournaments", "join"]
+            }
+          }
+        },
+        {
+          "name": "Get Tournament Standings",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/tournaments/{{tournament_id}}/standings",
+              "host": ["{{base_url}}"],
+              "path": ["tournaments", "{{tournament_id}}", "standings"]
+            }
+          }
+        },
+        {
+          "name": "Get Tournament Bracket",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/tournaments/{{tournament_id}}/bracket",
+              "host": ["{{base_url}}"],
+              "path": ["tournaments", "{{tournament_id}}", "bracket"]
+            }
+          }
+        },
+        {
+          "name": "Get My Tournaments",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/tournaments/my-tournaments",
+              "host": ["{{base_url}}"],
+              "path": ["tournaments", "my-tournaments"]
+            }
+          }
         }
       ]
     }

@@ -12,31 +12,43 @@ import (
 )
 
 type Router struct {
-	engine           *gin.Engine
-	authHandler      *handlers.AuthHandler
-	userHandler      *handlers.UserHandler
-	simulatorHandler *handlers.SimulatorHandler
-	jwtManager       *jwt.JWTManager
-	redis            *database.RedisClient
-	config           *config.Config
+	engine             *gin.Engine
+	authHandler        *handlers.AuthHandler
+	userHandler        *handlers.UserHandler
+	simulatorHandler   *handlers.SimulatorHandler
+	pvpHandler         *handlers.PvPHandler
+	rankingsHandler    *handlers.RankingsHandler
+	tokensHandler      *handlers.TokensHandler
+	tournamentsHandler *handlers.TournamentsHandler
+	jwtManager         *jwt.JWTManager
+	redis              *database.RedisClient
+	config             *config.Config
 }
 
 func NewRouter(
 	authHandler *handlers.AuthHandler,
 	userHandler *handlers.UserHandler,
 	simulatorHandler *handlers.SimulatorHandler,
+	pvpHandler *handlers.PvPHandler,
+	rankingsHandler *handlers.RankingsHandler,
+	tokensHandler *handlers.TokensHandler,
+	tournamentsHandler *handlers.TournamentsHandler,
 	jwtManager *jwt.JWTManager,
 	redis *database.RedisClient,
 	cfg *config.Config,
 ) *Router {
 	return &Router{
-		engine:           gin.Default(),
-		authHandler:      authHandler,
-		userHandler:      userHandler,
-		simulatorHandler: simulatorHandler,
-		jwtManager:       jwtManager,
-		redis:            redis,
-		config:           cfg,
+		engine:             gin.Default(),
+		authHandler:        authHandler,
+		userHandler:        userHandler,
+		simulatorHandler:   simulatorHandler,
+		pvpHandler:         pvpHandler,
+		rankingsHandler:    rankingsHandler,
+		tokensHandler:      tokensHandler,
+		tournamentsHandler: tournamentsHandler,
+		jwtManager:         jwtManager,
+		redis:              redis,
+		config:             cfg,
 	}
 }
 
@@ -50,6 +62,7 @@ func (r *Router) Setup() *gin.Engine {
 		c.JSON(http.StatusOK, gin.H{
 			"status":  "healthy",
 			"service": "smart-stocks-api",
+			"version": "1.0.0",
 		})
 	})
 
@@ -87,6 +100,58 @@ func (r *Router) Setup() *gin.Engine {
 			simulator.GET("/history", r.simulatorHandler.GetHistory)
 			simulator.GET("/cooldown/:difficulty", r.simulatorHandler.GetCooldownStatus)
 			simulator.GET("/stats", r.simulatorHandler.GetStats)
+		}
+
+		// PvP routes
+		pvp := v1.Group("/pvp")
+		{
+			// WebSocket endpoint
+			pvp.GET("/ws", middleware.WebSocketAuthMiddleware(r.jwtManager), r.pvpHandler.WebSocket)
+
+			// REST endpoints
+			pvpRest := pvp.Group("")
+			pvpRest.Use(middleware.AuthMiddleware(r.jwtManager))
+			{
+				pvpRest.POST("/queue/join", r.pvpHandler.JoinQueue)
+				pvpRest.POST("/queue/leave", r.pvpHandler.LeaveQueue)
+				pvpRest.POST("/submit", r.pvpHandler.SubmitDecision)
+				pvpRest.GET("/history", r.pvpHandler.GetHistory)
+			}
+		}
+
+		// Rankings routes (protegidas)
+		rankings := v1.Group("/rankings")
+		rankings.Use(middleware.AuthMiddleware(r.jwtManager))
+		{
+			rankings.GET("/global", r.rankingsHandler.GetGlobalLeaderboard)
+			rankings.GET("/school/:school_id", r.rankingsHandler.GetSchoolLeaderboard)
+			rankings.GET("/my-school", r.rankingsHandler.GetMySchoolLeaderboard)
+			rankings.GET("/my-position", r.rankingsHandler.GetMyPosition)
+			rankings.GET("/profile/:user_id", r.rankingsHandler.GetPublicProfile)
+			rankings.GET("/achievements", r.rankingsHandler.GetMyAchievements)
+
+			// Admin endpoints
+			rankings.POST("/admin/update-cache", r.rankingsHandler.UpdateCache)
+		}
+
+		// Tokens routes (protegidas)
+		tokens := v1.Group("/tokens")
+		tokens.Use(middleware.AuthMiddleware(r.jwtManager))
+		{
+			tokens.GET("/balance", r.tokensHandler.GetMyTokens)
+			tokens.GET("/transactions", r.tokensHandler.GetTransactionHistory)
+		}
+
+		// Tournaments routes (protegidas)
+		tournaments := v1.Group("/tournaments")
+		tournaments.Use(middleware.AuthMiddleware(r.jwtManager))
+		{
+			tournaments.GET("", r.tournamentsHandler.GetActiveTournaments)
+			tournaments.GET("/my-tournaments", r.tournamentsHandler.GetMyTournaments)
+			tournaments.GET("/:tournament_id", r.tournamentsHandler.GetTournamentDetails)
+			tournaments.POST("/join", r.tournamentsHandler.JoinTournament)
+			tournaments.GET("/:tournament_id/standings", r.tournamentsHandler.GetTournamentStandings)
+			tournaments.GET("/:tournament_id/bracket", r.tournamentsHandler.GetTournamentBracket)
 		}
 	}
 

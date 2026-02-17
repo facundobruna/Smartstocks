@@ -90,6 +90,47 @@ func (r *SimulatorRepository) GetActiveScenarioByDifficulty(difficulty models.Si
 	return scenario, nil
 }
 
+// GetRandomScenarioByDifficulty obtiene un escenario aleatorio por dificultad
+func (r *SimulatorRepository) GetRandomScenarioByDifficulty(difficulty models.SimulatorDifficulty) (*models.SimulatorScenario, error) {
+	scenario := &models.SimulatorScenario{}
+	var chartDataJSON []byte
+
+	query := `
+		SELECT id, difficulty, news_content, chart_data,
+			   correct_decision, explanation, created_at, expires_at, is_active
+		FROM simulator_scenarios
+		WHERE difficulty = ? AND is_active = TRUE AND expires_at > NOW()
+		ORDER BY RAND()
+		LIMIT 1
+	`
+
+	err := r.db.QueryRow(query, difficulty).Scan(
+		&scenario.ID,
+		&scenario.Difficulty,
+		&scenario.NewsContent,
+		&chartDataJSON,
+		&scenario.CorrectDecision,
+		&scenario.Explanation,
+		&scenario.CreatedAt,
+		&scenario.ExpiresAt,
+		&scenario.IsActive,
+	)
+
+	if err == sql.ErrNoRows {
+		return nil, nil // No hay escenarios disponibles
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	// Parsear chart data JSON
+	if err := json.Unmarshal(chartDataJSON, &scenario.ChartData); err != nil {
+		return nil, fmt.Errorf("error unmarshaling chart data: %w", err)
+	}
+
+	return scenario, nil
+}
+
 // GetScenarioByID obtiene un escenario por ID
 func (r *SimulatorRepository) GetScenarioByID(scenarioID string) (*models.SimulatorScenario, error) {
 	scenario := &models.SimulatorScenario{}
@@ -250,13 +291,13 @@ func (r *SimulatorRepository) GetUserAttempts(userID string, limit int) ([]model
 
 // GetUserStats obtiene estadísticas del simulador para un usuario
 func (r *SimulatorRepository) GetUserStats(userID string) (*models.SimulatorStats, error) {
-	// Estadísticas generales
+	// Estadísticas generales - USAR COALESCE para manejar NULL
 	var totalAttempts, correctAttempts, totalPoints int
 	query := `
 		SELECT 
-			COUNT(*) as total,
-			SUM(CASE WHEN was_correct THEN 1 ELSE 0 END) as correct,
-			SUM(CASE WHEN was_correct THEN points_earned ELSE 0 END) as points
+			COALESCE(COUNT(*), 0) as total,
+			COALESCE(SUM(CASE WHEN was_correct THEN 1 ELSE 0 END), 0) as correct,
+			COALESCE(SUM(CASE WHEN was_correct THEN points_earned ELSE 0 END), 0) as points
 		FROM simulator_attempts
 		WHERE user_id = ?
 	`
@@ -279,9 +320,9 @@ func (r *SimulatorRepository) GetUserStats(userID string) (*models.SimulatorStat
 		var attempts, correct, points int
 		query := `
 			SELECT 
-				COUNT(*) as total,
-				SUM(CASE WHEN was_correct THEN 1 ELSE 0 END) as correct,
-				SUM(CASE WHEN was_correct THEN points_earned ELSE 0 END) as points
+				COALESCE(COUNT(*), 0) as total,
+				COALESCE(SUM(CASE WHEN was_correct THEN 1 ELSE 0 END), 0) as correct,
+				COALESCE(SUM(CASE WHEN was_correct THEN points_earned ELSE 0 END), 0) as points
 			FROM simulator_attempts
 			WHERE user_id = ? AND difficulty = ?
 		`
